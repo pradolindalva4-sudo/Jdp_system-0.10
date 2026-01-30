@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DONY sistema - JDP v14.5 ELITE QR</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="manifest" href="public/manifest.json">
+    <link rel="icon" href="public/Icons/icon-192x192.png">
+     <style>
+        :root { --gold: #f59e0b; --dark: #050b1a; --card: #111827; --green: #10b981; --red: #ef4444; --blue-tech: #00f2ff; --pix: #32bcad; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: white; margin: 0; padding: 10px; padding-bottom: 160px; overflow-x: hidden; }       .cabecalho-oficial { color: var(--gold); font-size: 10px; text-align: center; padding: 5px; font-weight: bold; }
+        
+        .botao-secreto { position: absolute; top: 0; left: 0; width: 60px; height: 60px; background: transparent; z-index: 1000; }
+        
+        #reader { width: 100%; max-width: 400px; margin: 0 auto 10px auto; border-radius: 15px; overflow: hidden; display: none; border: 3px solid var(--blue-tech); }
+        
+        .container-busca { display: flex; gap: 8px; margin-bottom: 10px; }
+        #campoBusca { flex: 1; padding: 18px; border-radius: 12px; border: 2px solid var(--blue-tech); background: #0d1117; color: white; font-size: 18px; outline: none; }⁰00
+        .btn-camera-pdv { background: var(--blue-tech); border: none; border-radius: 12px; padding: 0 20px; color: #000; font-size: 22px; cursor: pointer; }
+
+        .visor-total { background: #000; border: 2px solid var(--gold); border-radius: 15px; padding: 20px; text-align: center; margin: 15px 0; box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
+        .visor-total strong { font-size: 42px; color: white; }
+
+        #listaBusca { margin-bottom: 10px; max-height: 200px; overflow-y: auto; }
+        .item-busca { background: #fff; color: #000; padding: 15px; border-radius: 8px; margin-bottom: 5px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; border-left: 5px solid var(--blue-tech); }
+
+        .container-carrinho { background: #0d1117; border: 1px solid #374151; border-radius: 12px; padding: 10px; margin-bottom: 15px; min-height: 100px; }
+        .item-carrinho { display: flex; justify-content: space-between; align-items: center; background: #1f2937; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid var(--gold); }
+        .btn-remover { background: var(--red); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; }
+
+        .painel-pagamento { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; padding: 15px; display: flex; gap: 10px; box-sizing: border-box; border-top: 3px solid var(--gold); z-index: 2000; }
+        .btn-pag { flex: 1; padding: 18px; border: none; border-radius: 12px; font-weight: bold; color: white; font-size: 14px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .btn-pix { background: var(--pix); }
+        .btn-dinheiro { background: var(--green); }
+        .btn-cartao { background: #3b82f6; }
+
+        /* Modais Helena */
+        .modal-helena { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 4000; justify-content: center; align-items: center; }
+        .helena-content { background: var(--card); width: 95%; max-width: 500px; padding: 25px; border-radius: 25px; border: 2px solid var(--blue-tech); text-align: center; }
+        
+        .input-dinheiro { width: 80%; padding: 15px; font-size: 24px; text-align: center; border-radius: 10px; border: 2px solid var(--green); background: #000; color: var(--green); margin: 10px 0; }
+        .visor-troco { font-size: 30px; color: var(--gold); margin: 15px 0; font-weight: bold; }
+
+        .helena-float { position: fixed; bottom: 110px; right: 20px; width: 60px; height: 60px; background: var(--blue-tech); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; color: #000; cursor: pointer; box-shadow: 0 0 20px var(--blue-tech); z-index: 3000; }
+
+        #tela-pix { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 5000; text-align: center; padding-top: 40px; }
+        .caixa-pix { background: #fff; color: #000; width: 85%; max-width: 350px; margin: 0 auto; padding: 25px; border-radius: 25px; border: 6px solid var(--pix); }
+
+        /* Área Oculta para Foto do Relatório */
+        #area-foto-relatorio { background: white; color: black; padding: 30px; width: 600px; position: absolute; left: -9999px; }
+        .tabela-foto { width: 100%; border-collapse: collapse; margin-top: 15px; border: 2px solid black; }
+        .tabela-foto th, .tabela-foto td { border: 1px solid black; padding: 10px; text-align: left; font-size: 14px; color: black; }
+    </style>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBZzzC6Eubypa-105sfA-f0o-mJd70A64I",
+            authDomain: "dony-sistemas.firebaseapp.com",
+            projectId: "dony-sistemas",
+            storageBucket: "dony-sistemas.firebasestorage.app",
+            messagingSenderId: "204883332472",
+            appId: "1:204883332472:web:8c612c7554907a90948948"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.enviarAoPainel = async (dados) => {
+            try {
+                await setDoc(doc(db, "sistema", "comunicacao"), {
+                    ...dados,
+                    timestamp: Date.now()
+                });
+            } catch (e) { console.error("Falha na ponte Firebase:", e); }
+        };
+    </script>
+</head>
+<body>
+
+    
+        <div class="assinatura-senior">Criado e desenvolvido por José Divino Plata da Lapa Engenheiro sênio</div>
+    <div class="cabecalho-oficial">010 SUPERMERCADOS 010 - v14.5 ELITE</div>
+    
+    <div class="botao-secreto" onclick="abrirEscritorio()"></div>
+
+    <div id="interface-caixa">
+        <div id="reader"></div>
+
+        <div class="container-busca">
+            <input type="text" id="campoBusca" placeholder="🔍 Buscar produto ou código..." onkeyup="filtrarProdutos()">
+            <button class="btn-camera-pdv" onclick="iniciarLeitor('venda')">
+                <i class="fas fa-barcode"></i>
+            </button>
+        </div>
+
+        <div id="listaBusca"></div>
+
+        <div class="visor-total">
+            <small style="color:var(--gold); font-weight: bold; letter-spacing: 2px;">TOTAL A PAGAR</small><br>
+            <strong id="totalDisplay">R$ 0,00</strong>
+        </div>
+
+        <div id="containerCarrinho" class="container-carrinho"></div>
+    </div>
+
+    <!-- Painel de Pagamento Fixo -->
+    <div class="painel-pagamento">
+        <button class="btn-pag btn-pix" onclick="iniciarPagamento('PIX')">
+            <i class="fas fa-qrcode fa-lg"></i> PIX
+        </button>
+        <button class="btn-pag btn-dinheiro" onclick="iniciarPagamento('DINHEIRO')">
+            <i class="fas fa-money-bill-wave fa-lg"></i> DINHEIRO
+        </button>
+        <button class="btn-pag btn-cartao" onclick="iniciarPagamento('CARTAO')">
+            <i class="fas fa-credit-card fa-lg"></i> CARTÃO
+        </button>
+    </div>
+
+    <!-- Modal Dinheiro -->
+    <div id="modal-dinheiro" class="modal-helena">
+        <div class="helena-content" style="border-color: var(--green);">
+            <h2 style="color: var(--green);">PAGAMENTO EM DINHEIRO</h2>
+            <p>Valor da Venda: <span id="valorVendaDinheiro" style="font-weight:bold;">R$ 0,00</span></p>
+            <label>VALOR RECEBIDO:</label><br>
+            <input type="number" id="inputRecebido" class="input-dinheiro" placeholder="0,00" oninput="calcularTroco()">
+            <div class="visor-troco">
+                TROCO: <span id="valorTroco">R$ 0,00</span>
+            </div>
+            <button onclick="finalizarVendaDinheiro()" style="background:var(--green); color:white; width:100%; padding:20px; border:none; border-radius:15px; font-weight:bold; font-size:18px;">
+                <i class="fas fa-check-circle"></i> FINALIZAR E BAIXAR
+            </button>
+            <button onclick="fecharModalDinheiro()" style="background:transparent; color:var(--red); width:100%; padding:12px; margin-top:10px; border:none; font-weight:bold;">CANCELAR</button>
+        </div>
+    </div>
+
+    <!-- Painel Admin -->
+    <div id="painel-admin" style="display:none; background:#1f2937; padding:15px; border-radius:15px; border:2px solid var(--gold); margin: 10px;">
+        <h3 style="color:var(--gold); text-align:center;">ESCRITÓRIO TÉCNICO JDP</h3>
+        <button onclick="conectarImpressora()" style="width:100%; background:#3b82f6; color:white; padding:15px; border:none; border-radius:10px; font-weight:bold; margin-bottom:10px;">🔌 CONECTAR IMPRESSORA</button>
+        <button onclick="toggleSecao('secao-insumos')" style="width:100%; background:var(--gold); color:black; padding:15px; border:none; border-radius:10px; font-weight:bold;">📊 GESTÃO DE ESTOQUE</button>
+        
+        <div id="secao-insumos" style="display:none; background:white; padding:10px; border-radius:10px; margin-top:10px; color:black;">
+            <div style="display:flex; gap:5px; margin-bottom:10px;">
+                <button onclick="adicionarNovoInsumo()" style="background:var(--blue-tech); flex:1; padding:10px; border:none; border-radius:5px; font-weight:bold;">+ NOVO ITEM</button>
+                <button onclick="iniciarLeitor('cadastro')" style="background:#000; color:#fff; padding:10px; border:none; border-radius:5px; font-weight:bold;"><i class="fas fa-barcode"></i> SCAN</button>
+            </div>
+            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                <thead><tr style="background:#eee"><th>ITEM</th><th>QTD</th><th>PREÇO</th><th>X</th></tr></thead>
+                <tbody id="corpo-insumos"></tbody>
+            </table>
+        </div>
+        <button onclick="document.getElementById('painel-admin').style.display='none'" style="background:gray; color:white; width:100%; padding:10px; border:none; border-radius:10px; margin-top:10px;">SAIR DO PAINEL</button>
+    </div>
+
+    <!-- Helena AI -->
+    <div class="helena-float" onclick="abrirHelena()">
+        <i class="fas fa-robot"></i>
+    </div>
+
+    <div id="modal-helena" class="modal-helena">
+        <div class="helena-content">
+            <h2 style="color: var(--blue-tech);">HELENA v13.5</h2>
+            <div id="helena-feedback" style="color:white; margin-bottom:15px;">Sr. José, aguardando comando de auditoria.</div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <button onclick="gerarRelatorioIA('estoque')" style="background:var(--gold); border:none; padding:15px; border-radius:10px; font-weight:bold;">📸 RELATÓRIO ESTOQUE (FOTO)</button>
+                <button onclick="gerarRelatorioIA('vendas')" style="background:var(--blue-tech); border:none; padding:15px; border-radius:10px; font-weight:bold;">📸 RELATÓRIO VENDAS (FOTO)</button>
+            </div>
+            <div id="container-resultado-foto">
+                <img id="resultado-foto" style="width:100%; display:none; border:3px solid var(--gold); border-radius:10px; margin-top:10px;">
+                <button id="btn-compartilhar" style="display:none; width:100%; padding:15px; background:var(--green); color:white; border:none; border-radius:10px; margin-top:10px; font-weight:bold;">SALVAR RELATÓRIO</button>
+            </div>
+            <button onclick="fecharHelena()" style="background:var(--red); color:white; width:100%; padding:12px; margin-top:20px; border:none; border-radius:12px;">VOLTAR</button>
+        </div>
+    </div>
+
+    <!-- Tela PIX -->
+    <div id="tela-pix">
+        <div class="caixa-pix">
+            <h2 style="color:var(--pix)">PAGAMENTO PIX</h2>
+            <div id="qrcode-pix" style="display: flex; justify-content: center; margin-bottom: 15px;"></div>
+            <p id="valorPix" style="font-weight:bold; font-size:28px; color:#333;"></p>
+            <button onclick="processarFinalizacaoSistema('PIX', true)" style="background:var(--green); color:white; width:100%; padding:20px; border:none; border-radius:15px; font-weight:bold;">CONFIRMAR E IMPRIMIR</button>
+            <button onclick="document.getElementById('tela-pix').style.display='none'" style="background:#ddd; color:#333; width:100%; padding:12px; border:none; border-radius:15px; margin-top:15px;">VOLTAR</button>
+        </div>
+    </div>
+
+    <!-- Elemento Oculto para Captura de Foto -->
+    <div id="area-foto-relatorio">
+        <div style="border: 5px solid black; padding: 20px;">
+            <h1 id="titulo-relatorio" style="text-align:center; margin:0;">RELATÓRIO JDP INDUSTRIAL</h1>
+            <p id="data-relatorio" style="text-align:center; font-weight:bold;"></p>
+            <table class="tabela-foto">
+                <thead id="cabecalho-foto"></thead>
+                <tbody id="corpo-foto"></tbody>
+            </table>
+            <div id="rodape-foto" style="margin-top:20px; font-weight:bold; text-align:right; font-size:20px;"></div>
+        </div>
+    </div>
+
+    <script>
+        const _S = "drkling2025";
+        const PIX_BRCODE = "00020126500014br.gov.bcb.pix0128josedivinoprado649@gmail.com5204000053039865802BR5925Jose Divino Prado Da Lapa6009Sao Paulo62290525REC69575900EE6EA89487021563041F98";
+        const canalVendas = new BroadcastChannel('010_REDE_SUPERMERCADO');
+
+        let pedido = [];
+        let caracteristicaImpressora = null;
+        let html5QrCode = null;
+
+        // --- FUNÇÕES DE VENDA ---
+        function obterTotalNumerico() { 
+            return pedido.reduce((acc, i) => acc + i.preco, 0); 
+        }
+
+        function atualizarVisor() { 
+            document.getElementById('totalDisplay').innerText = `R$ ${obterTotalNumerico().toFixed(2).replace('.',',')}`; 
+        }
+
+        function filtrarProdutos() {
+            const termo = document.getElementById('campoBusca').value.toLowerCase();
+            const estoqueDB = JSON.parse(localStorage.getItem('dony_insumos')) || [];
+            if(termo === "") { document.getElementById('listaBusca').innerHTML = ""; return; }
+            const filtrados = estoqueDB.filter(p => p.item.toLowerCase().includes(termo));
+            document.getElementById('listaBusca').innerHTML = filtrados.map(i => `
+                <div class="item-busca" onclick="addAoCarrinho('${i.item}', ${i.valor})">
+                    <span>${i.item}</span><span>R$ ${parseFloat(i.valor).toFixed(2)}</span>
+                </div>
+            `).join('');
+        }
+
+        function addAoCarrinho(nome, preco) {
+            pedido.push({ nome, preco: parseFloat(preco) });
+            renderizarCarrinho();
+            atualizarVisor();
+            
+            const dados = { acao: 'MOSTRAR_NO_CAIXA', item: nome, valor: parseFloat(preco), total: document.getElementById('totalDisplay').innerText };
+            canalVendas.postMessage(dados);
+            if(window.enviarAoPainel) window.enviarAoPainel(dados);
+            
+            document.getElementById('campoBusca').value = "";
+            document.getElementById('listaBusca').innerHTML = "";
+        }
+
+        function renderizarCarrinho() {
+            document.getElementById('containerCarrinho').innerHTML = pedido.map((item, index) => `
+                <div class="item-carrinho">
+                    <div><strong>${item.nome}</strong><br><small>R$ ${item.preco.toFixed(2)}</small></div>
+                    <button class="btn-remover" onclick="removerItemSeguro(${index})">X</button>
+                </div>
+            `).join('');
+        }
+
+        function removerItemSeguro(index) {
+            if(prompt("SENHA ADMIN:") === _S) {
+                pedido.splice(index, 1);
+                renderizarCarrinho();
+                atualizarVisor();
+            }
+        }
+
+        // --- PAGAMENTOS ---
+        function iniciarPagamento(tipo) {
+            if(pedido.length === 0) return alert("Carrinho vazio!");
+            if(tipo === 'PIX') {
+                document.getElementById('valorPix').innerText = document.getElementById('totalDisplay').innerText;
+                const areaQr = document.getElementById("qrcode-pix");
+                areaQr.innerHTML = "";
+                new QRCode(areaQr, { text: PIX_BRCODE, width: 220, height: 220 });
+                document.getElementById('tela-pix').style.display = 'block';
+            } else if(tipo === 'DINHEIRO') {
+                abrirModalDinheiro();
+            } else {
+                const modo = confirm("OK para CRÉDITO | CANCELAR para DÉBITO");
+                processarFinalizacaoSistema(modo ? "CARTÃO CRÉDITO" : "CARTÃO DÉBITO", confirm("Imprimir comprovante?"));
+            }
+        }
+
+        function abrirModalDinheiro() {
+            const total = obterTotalNumerico();
+            document.getElementById('valorVendaDinheiro').innerText = `R$ ${total.toFixed(2).replace('.',',')}`;
+            document.getElementById('inputRecebido').value = '';
+            document.getElementById('valorTroco').innerText = 'R$ 0,00';
+            document.getElementById('modal-dinheiro').style.display = 'flex';
+        }
+
+        function fecharModalDinheiro() { document.getElementById('modal-dinheiro').style.display = 'none'; }
+
+        function calcularTroco() {
+            const total = obterTotalNumerico();
+            const recebido = parseFloat(document.getElementById('inputRecebido').value) || 0;
+            const troco = recebido - total;
+            const displayTroco = document.getElementById('valorTroco');
+            displayTroco.innerText = "R$ " + Math.max(0, troco).toFixed(2).replace('.',',');
+            displayTroco.style.color = troco < 0 ? "var(--red)" : "var(--gold)";
+        }
+
+        function finalizarVendaDinheiro() {
+            const total = obterTotalNumerico();
+            const recebido = parseFloat(document.getElementById('inputRecebido').value) || 0;
+            if(recebido < total) return alert("Valor insuficiente!");
+            processarFinalizacaoSistema('DINHEIRO', confirm("Imprimir?"));
+            fecharModalDinheiro();
+        }
+
+        // --- LÓGICA DE BAIXA E REGISTRO ---
+        async function processarFinalizacaoSistema(metodo, imprimir) {
+            const totalVenda = document.getElementById('totalDisplay').innerText;
+            const dataF = new Date().toLocaleString();
+            
+            // 1. Baixa no Estoque
+            let estoqueDB = JSON.parse(localStorage.getItem('dony_insumos')) || [];
+            pedido.forEach(itemVendido => {
+                let pIdx = estoqueDB.findIndex(p => p.item === itemVendido.nome);
+                if(pIdx !== -1) {
+                    estoqueDB[pIdx].qtd = Math.max(0, (estoqueDB[pIdx].qtd || 0) - 1);
+                }
+            });
+            localStorage.setItem('dony_insumos', JSON.stringify(estoqueDB));
+
+            // 2. Registro de Venda
+            let vendasDB = JSON.parse(localStorage.getItem('dony_vendas_anotadas')) || [];
+            vendasDB.push({ data: dataF, total: totalVenda, metodo: metodo });
+            localStorage.setItem('dony_vendas_anotadas', JSON.stringify(vendasDB));
+
+            // 3. Impressão
+            if(imprimir) await enviarImpressaoBluetooth(metodo);
+
+            // 4. Reset
+            pedido = [];
+            renderizarCarrinho();
+            atualizarVisor();
+            document.getElementById('tela-pix').style.display = 'none';
+            alert("VENDA FINALIZADA COM SUCESSO!");
+        }
+
+        // --- SCANNER ---
+        function iniciarLeitor(destino) {
+            document.getElementById('reader').style.display = 'block';
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (codigo) => {
+                html5QrCode.stop();
+                document.getElementById('reader').style.display = 'none';
+                if(destino === 'venda') {
+                    let db = JSON.parse(localStorage.getItem('dony_insumos')) || [];
+                    let p = db.find(x => x.codigo === codigo);
+                    if(p) addAoCarrinho(p.item, p.valor); else alert("Não cadastrado!");
+                } else {
+                    cadastrarComCodigo(codigo);
+                }
+            }).catch(err => alert("Erro na câmera."));
+        }
+
+        function cadastrarComCodigo(codigo) {
+            const n = prompt("Nome do Produto:");
+            const v = prompt("Preço:");
+            if(n && v) {
+                let db = JSON.parse(localStorage.getItem('dony_insumos')) || [];
+                db.push({ item: n, codigo: codigo, qtd: 10, valor: parseFloat(v.replace(',','.')) });
+                localStorage.setItem('dony_insumos', JSON.stringify(db));
+                renderizarInsumos();
+            }
+        }
+
+        // --- ADMIN & ESTOQUE ---
+        function renderizarInsumos() {
+            let db = JSON.parse(localStorage.getItem('dony_insumos')) || [];
+            document.getElementById('corpo-insumos').innerHTML = db.map((ins, i) => `
+                <tr>
+                    <td>${ins.item}</td>
+                    <td><input type="number" style="width:45px" value="${ins.qtd}" onchange="atualizarQtd(${i}, this.value)"></td>
+                    <td>R$ ${ins.valor.toFixed(2)}</td>
+                    <td><button onclick="removerInsumo(${i})" style="color:red">X</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function atualizarQtd(idx, valor) {
+            let db = JSON.parse(localStorage.getItem('dony_insumos')) || [];
+            db[idx].qtd = parseInt(valor);
+            localStorage.setItem('dony_insumos', JSON.stringify(db));
+        }
+
+        function removerInsumo(i) {
+            if(confirm("Excluir item?")) {
+                let db = JSON.parse(localStorage.getItem('dony_insumos')) || [];
+                db.splice(i, 1);
+                localStorage.setItem('dony_insumos', JSON.stringify(db));
+                renderizarInsumos();
+            }
+        }
+
+        function adicionarNovoInsumo() {
+            const n = prompt("Nome:"), v = prompt("Preço:");
+            if(n && v) {
+                let db = JSON.parse(localStorage.getItem('dony_insumos')) || [];
+                db.push({ item: n, codigo: null, qtd: 0, valor: parseFloat(v.replace(',','.')) });
+                localStorage.setItem('dony_insumos', JSON.stringify(db));
+                renderizarInsumos();
+            }
+        }
+
+        // --- HELENA RELATÓRIOS FOTOGRÁFICOS ---
+        async function gerarRelatorioIA(tipo) {
+            const corpo = document.getElementById('corpo-foto');
+            const cabecalho = document.getElementById('cabecalho-foto');
+            const rodape = document.getElementById('rodape-foto');
+            const titulo = document.getElementById('titulo-relatorio');
+            
+            document.getElementById('data-relatorio').innerText = new Date().toLocaleString();
+            rodape.innerText = "";
+
+            if(tipo === 'estoque') {
+                titulo.innerText = "AUDITORIA DE ESTOQUE JDP";
+                let db = JSON.parse(localStorage.getItem('dony_insumos')) || [];
+                cabecalho.innerHTML = "<tr><th>PRODUTO</th><th>QTD</th><th>VALOR UNIT</th></tr>";
+                corpo.innerHTML = db.map(i => `<tr><td>${i.item}</td><td>${i.qtd}</td><td>R$ ${i.valor.toFixed(2)}</td></tr>`).join('');
+            } else {
+                titulo.innerText = "FECHAMENTO DE VENDAS JDP";
+                let dbVendas = JSON.parse(localStorage.getItem('dony_vendas_anotadas')) || [];
+                cabecalho.innerHTML = "<tr><th>DATA/HORA</th><th>MÉTODO</th><th>TOTAL</th></tr>";
+                corpo.innerHTML = dbVendas.map(v => `<tr><td>${v.data}</td><td>${v.metodo}</td><td>${v.total}</td></tr>`).join('');
+                
+                let soma = dbVendas.reduce((acc, v) => acc + parseFloat(v.total.replace('R$', '').replace('.','').replace(',','.')), 0);
+                rodape.innerText = "TOTAL GERAL: R$ " + soma.toFixed(2).replace('.',',');
+            }
+
+            setTimeout(async () => {
+                const canvas = await html2canvas(document.querySelector("#area-foto-relatorio"));
+                const img = document.getElementById('resultado-foto');
+                img.src = canvas.toDataURL();
+                img.style.display = "block";
+                document.getElementById('btn-compartilhar').style.display = "block";
+                document.getElementById('btn-compartilhar').onclick = () => {
+                    const link = document.createElement('a');
+                    link.download = `JDP_${tipo}_${Date.now()}.png`;
+                    link.href = img.src;
+                    link.click();
+                };
+            }, 500);
+        }
+
+        // --- BLUETOOTH ---
+        async function conectarImpressora() {
+            try {
+                const device = await navigator.bluetooth.requestDevice({ 
+                    filters: [{ namePrefix: '58' }, { namePrefix: 'Bluetooth' }],
+                    optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] 
+                });
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+                const characteristics = await service.getCharacteristics();
+                caracteristicaImpressora = characteristics.find(c => c.properties.write);
+                alert("IMPRESSORA JDP CONECTADA!");
+            } catch (e) { alert("Erro Bluetooth: " + e); }
+        }
+
+        async function enviarImpressaoBluetooth(metodo) {
+            if (!caracteristicaImpressora) return;
+            let m = `   010 SUPERMERCADOS\n   Data: ${new Date().toLocaleString()}\n--------------------------------\n`;
+            pedido.forEach(i => { m += `${i.nome.substring(0,18).padEnd(20, '.')} R$ ${i.preco.toFixed(2)}\n`; });
+            m += `--------------------------------\nTOTAL: ${document.getElementById('totalDisplay').innerText}\nFORMA: ${metodo}\n\n   Eng. Jose Divino Prado\n\n\n\n`;
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(m);
+            for (let i = 0; i < bytes.length; i += 20) { await caracteristicaImpressora.writeValue(bytes.slice(i, i + 20)); }
+        }
+
+        function toggleSecao(id) { 
+            const el = document.getElementById(id);
+            el.style.display = el.style.display === 'none' ? 'block' : 'none'; 
+            if(id === 'secao-insumos') renderizarInsumos(); 
+        }
+        
+        function abrirEscritorio() { if(prompt("SENHA JDP:") === _S) document.getElementById('painel-admin').style.display='block'; }
+        function abrirHelena() { document.getElementById('modal-helena').style.display = 'flex'; }
+                function fecharHelena() { 
+            document.getElementById('modal-helena').style.display = 'none'; 
+            document.getElementById('resultado-foto').style.display = 'none';
+            document.getElementById('btn-compartilhar').style.display = 'none';
+        }
+
+        // --- ATIVAÇÃO DO MOTOR JDP v14.5 ---
+        // Este bloco deve ficar FORA das funções para rodar ao abrir o site
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                .then(() => console.log("Engenheiro, motor PWA ativado!"))
+                .catch(err => console.log("Erro no motor: ", err));
+            });
+        }
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.0.0/workbox-sw.js');
+
+if (workbox) {
+  workbox.core.skipWaiting();
+  workbox.core.clientsClaim();
+
+  workbox.routing.registerRoute(
+    /\.(?:js|css|png|gif|jpg|jpeg|svg|woff|woff2|ttf|eot)$/,
+    new workbox.strategies.CacheFirst({
+      cacheName: 'jdp-assets-elite',
+      plugins: [
+        new workbox.expiration.ExpirationPlugin({
+          maxEntries: 100,
+          maxAgeSeconds: 30 * 24 * 60 * 60,
+        }),
+        new workbox.cacheableResponse.CacheableResponsePlugin({
+          statuses: [0, 200],
+        }),
+      ],
+    })
+  );
+
+  workbox.routing.registerRoute(
+    ({request}) => request.destination === 'document' || request.mode === 'navigate',
+    new workbox.strategies.NetworkFirst({
+      cacheName: 'jdp-main-elite',
+      plugins: [
+        new workbox.cacheableResponse.CacheableResponsePlugin({
+          statuses: [0, 200],
+        }),
+      ],
+    })
+  );
+
+  workbox.routing.registerRoute(
+    /.*(?:firebase|googleapis|cdnjs|unpkg)\.com.*/,
+    new workbox.strategies.StaleWhileRevalidate({
+      cacheName: 'jdp-cloud-elite',
+    })
+  );
+
+  workbox.precaching.cleanupOutdatedCaches();
+}
+
+    </script>
+</body>
+</html>
+
